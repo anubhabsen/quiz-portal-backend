@@ -5,13 +5,11 @@ var models = require('./models');
 var middleware = require('./middleware');
 
 function sendToken (user, res) {
-  user = user.toJSON();
-  user.password = undefined;
   jwt.sign({}, config.secret, { subject: user.id.toString(), expiresIn: "2h" }, function (err, token) {
     if (err != null) {
       throw err;
     } else {
-      res.send({token: token, user});
+      res.send({token: token, email: user.email, name: user.name});
     }
   });
 }
