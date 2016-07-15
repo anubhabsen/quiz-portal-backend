@@ -3,6 +3,8 @@ var router = require('express').Router();
 var config = require('./config');
 var models = require('./models');
 var middleware = require('./middleware');
+var bcrypt = require('bcrypt');
+const saltRounds = 10;
 
 function sendUserData (user, res) {
   jwt.sign({}, config.secret, { subject: user.id.toString(), expiresIn: "2h" }, function (err, token) {
@@ -21,10 +23,14 @@ router.post ('/login', middleware.isNotAuthenticated, (req, res, next) => {
     return;
   }
 
-  models.User.find({where : {
-    email, password
-  }}).then(user => {
-    if (user) sendUserData(user, res);
+  models.User.find({where : { email }}).then(user => {
+    if (user) {
+      bcrypt.compare(password, user.password, function(err, response) {
+        // response == true 
+        if(response == true) sendUserData(user, res);
+        else res.sendStatus(401);
+      });
+    }
     else res.sendStatus(401);
   }).catch(next)
 })
@@ -34,14 +40,20 @@ router.post ('/register',  middleware.isNotAuthenticated, (req, res, next) => {
 
   return models.User.find({where : { email }}).then(user => {
     if (user) {
-      if (user.password == password) sendUserData(user, res);
-      else res.sendStatus(401);
+      bcrypt.compare(password, user.password, function(err, response) {
+        // response == true 
+        if(response == true) sendUserData(user, res);
+        else res.sendStatus(401);
+      });
     } else {
-      return models.User.create({
-        email, password, name
-      }).then(user => {
-        sendUserData(user, res);
-      })
+      bcrypt.hash(password, saltRounds, function(err, hash) {
+        // Store hash in your password DB. 
+        return models.User.create({
+          email, hash, name
+        }).then(user => {
+          sendUserData(user, res);
+        })
+      });
     }
   }).catch(next)
 })
