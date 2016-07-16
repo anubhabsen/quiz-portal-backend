@@ -25,6 +25,7 @@ router.post ('/login', middleware.isNotAuthenticated, (req, res, next) => {
   models.User.find({where : { email }}).then(user => {
     if (user) {
       bcrypt.compare(password, user.password, function(err, response) {
+        if (err) return next (err);
         if (response == true) sendUserData(user, res);
         else res.sendStatus(401);
       });
@@ -38,14 +39,16 @@ router.post ('/register',  middleware.isNotAuthenticated, (req, res, next) => {
   return models.User.find({where : { email }}).then(user => {
     if (user) {
       bcrypt.compare(password, user.password, function(err, response) {
+        if (err) return next (err);
         if (response == true) sendUserData(user, res);
         else res.sendStatus(401);
       });
     } else {
-      bcrypt.hash(password, saltRounds, function(err, hash) {
+      bcrypt.hash(password, config.saltRounds, function(err, hash) {
         // Store hash in your password DB. 
+        if (err) return next (err);
         return models.User.create({
-          email, password, name
+          email, hash, name
         }).then(user => {
           sendUserData(user, res);
         })
