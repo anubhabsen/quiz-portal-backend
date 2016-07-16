@@ -1,10 +1,11 @@
 var models = require('./index')
+var bcrypt = require('bcrypt');
 
 module.exports = function () {
   models.sequelize.sync().then(function () {
     return models.User.bulkCreate([
-      { email: 'megh@gmail.com', password: 'password', name: 'Megh'},
-      { email: 'megh2@gmail.com', password: 'password', name: 'Megh2'}
+      { email: 'megh@gmail.com', password: bcrypt.hashSync('password', 10), name: 'Megh'},
+      { email: 'megh2@gmail.com', password: bcrypt.hashSync('password', 10), name: 'Megh2'}
     ], { ignoreDuplicates: true })
   }).then(function () {
     return models.Question.bulkCreate([
