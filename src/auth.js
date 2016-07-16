@@ -29,6 +29,8 @@ router.post ('/login', middleware.isNotAuthenticated, (req, res, next) => {
         if (response == true) sendUserData(user, res);
         else res.sendStatus(401);
       });
+    } else {
+      res.sendStatus (401)
     }
   }).catch(next)
 })
